@@ -618,6 +618,23 @@ async function detectDiscordTab() {
 
   return tabs.find(tab => tab.id && tab.url) || null;
 }
+async function playCompletionSound() {
+  try {
+    if (!chrome.offscreen) return;
+    const offscreenUrl = chrome.runtime.getURL("offscreen.html");
+    if (!(await chrome.offscreen.hasDocument())) {
+      await chrome.offscreen.createDocument({
+        url: "offscreen.html",
+        reasons: ["AUDIO_PLAYBACK"],
+        justification: "Play a short sound when the current timer/task finishes."
+      });
+    }
+    await chrome.runtime.sendMessage({ type: "BADGEIFY_PLAY_SUCCESS_SOUND" });
+  } catch (error) {
+    console.warn("[Badgeify] Completion sound unavailable:", error);
+  }
+}
+
 function updateStatus(a) {
   if (activeTask) activeTask.status = a;
 
@@ -628,6 +645,7 @@ function updateStatus(a) {
 
   // pc notify shit
   if (a?.completed) {
+    playCompletionSound();
     chrome.notifications.create(
       `badgeify-${Date.now()}`,
       {
