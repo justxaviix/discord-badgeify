@@ -416,6 +416,29 @@
           (a.textContent = e.error
             ? `Error: ${e.error}`
             : e.message || "Open Discord in a tab first.");
+
+        // Show browser-tab detection separately from account authentication.
+        // This only checks whether a Discord website tab is open.
+        chrome.tabs.query(
+          {
+            url: [
+              "https://discord.com/*",
+              "https://ptb.discord.com/*",
+              "https://canary.discord.com/*"
+            ]
+          },
+          (tabs) => {
+            if (chrome.runtime.lastError) return;
+            if (tabs && tabs.some((tab) => tab.id && tab.url)) {
+              L.textContent = "Web detected";
+              L.className = "version-tag connected";
+              if (a) {
+                a.textContent =
+                  "Discord website detected. Account connection is separate.";
+              }
+            }
+          }
+        );
         return;
       }
       (D.classList.add("hidden"),
