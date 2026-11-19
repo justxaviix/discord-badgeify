@@ -607,7 +607,17 @@ async function postBatch(a, t, e, s, n, c, d) {
     return (console.error("[Badgeify] Background postBatch error:", r), 0);
   }
 }
-function updateStatus(a) {
+async function detectDiscordTab() {
+  const tabs = await chrome.tabs.query({
+    url: [
+      "https://discord.com/*",
+      "https://ptb.discord.com/*",
+      "https://canary.discord.com/*"
+    ]
+  });
+
+  return tabs.find(tab => tab.id && tab.url) || null;
+}
 function updateStatus(a) {
   if (activeTask) activeTask.status = a;
 
