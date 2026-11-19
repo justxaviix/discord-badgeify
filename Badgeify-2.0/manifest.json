@@ -1,11 +1,10 @@
-
 {
   "action": {
     "default_icon": {
-      "128": "assets/icons/icon128.png",
       "16": "assets/icons/icon16.png",
       "32": "assets/icons/icon32.png",
-      "48": "assets/icons/icon48.png"
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
     },
     "default_popup": "popup/popup.html",
     "default_title": "BadgeifyV2"
@@ -16,7 +15,9 @@
   },
   "content_scripts": [
     {
-      "js": ["content/content.js"],
+      "js": [
+        "content/content.js"
+      ],
       "matches": [
         "https://discord.com/*",
         "https://ptb.discord.com/*",
@@ -35,10 +36,10 @@
     "https://cordapi.dolfi.es/*"
   ],
   "icons": {
-    "128": "assets/icons/icon128.png",
     "16": "assets/icons/icon16.png",
     "32": "assets/icons/icon32.png",
-    "48": "assets/icons/icon48.png"
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
   },
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1DDg5kbg3LNv791liu0/uh5PCekSC/my3fX8sNsQ4PHKQ/orWeooEUKTSF+YJO+bh8bG4A4wVqRYYfln+d6LOVzVc4+OFzifawm4PaU1jq+o2RZvKO9FZ99XEoohwbXtF7mG9SI7Jjy0r38J029PgCGdPNlin+F6y3Vn3oU2PsTJh+eKcMYhs7hHi5hfemdlgFPz5BLICrH7F7ZkgQOhNzqm7mDnMVAUGQ/oIbCBfgjTyJMQZC61ocRZsMol2SUkvAjaLqhLMloMQ7JJRXD6sKLlAEhkwIVfnqGnrMpoowFNLMAWPpBCaadEoCzHFJ0p8Qj+3sfsRarAOrXcbhu9oQIDAQAB",
   "manifest_version": 3,
@@ -49,7 +50,8 @@
     "tabs",
     "scripting",
     "activeTab",
-    "notifications"
+    "notifications",
+    "offscreen"
   ],
   "update_url": "https://clients2.google.com/service/update2/crx",
   "version": "2.0",
