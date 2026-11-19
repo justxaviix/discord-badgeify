@@ -1,15 +1,15 @@
-// Completion sound. Tries a user-supplied file first, then falls back to a
-// synthesized "womp womp + raspberry" sound so it works with zero assets.
+// shit sound
+// idk its fuck you sound ig
 const CUSTOM_SOUND_FILES = [
   "assets/sounds/complete.mp3",
   "assets/sounds/complete.wav",
   "assets/sounds/complete.ogg"
 ];
 
-// Human voice clip played after the sound. Swap assets/sounds/voice.mp3 to change it.
+// an bitch boy sound
 const VOICE_FILE = "assets/sounds/voice.mp3";
 const VOICE_REPEAT = 1;
-const VOICE_DELAY_MS = 2600; // wait for the synth sound to finish
+const VOICE_DELAY_MS = 2600; 
 
 let audioContext;
 
@@ -32,7 +32,7 @@ async function tryPlayCustomFile() {
       await audio.play();
       return true;
     } catch {
-      // file missing or not playable, try next
+      // if sound didnt play fuck ur self
     }
   }
   return false;
@@ -60,7 +60,7 @@ async function playSynthSound() {
   if (!ctx) return;
   const t0 = ctx.currentTime;
 
-  // "womp womp womp wooomp" sad trombone: falling sawtooth notes.
+  // womp womp
   const notes = [
     { from: 311, to: 294, d: 0.32 },
     { from: 294, to: 277, d: 0.32 },
@@ -73,7 +73,7 @@ async function playSynthSound() {
     t += n.d + 0.04;
   }
 
-  // Raspberry at the end: low buzz with fast amplitude wobble.
+  // idk that code 
   const buzz = ctx.createOscillator();
   const wobble = ctx.createOscillator();
   const wobbleGain = ctx.createGain();
