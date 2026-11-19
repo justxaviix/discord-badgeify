@@ -608,10 +608,28 @@ async function postBatch(a, t, e, s, n, c, d) {
   }
 }
 function updateStatus(a) {
-  (activeTask && (activeTask.status = a),
-    chrome.runtime
-      .sendMessage({ type: "TASK_STATUS_UPDATE", payload: a })
-      .catch(() => {}));
+function updateStatus(a) {
+  if (activeTask) activeTask.status = a;
+
+  chrome.runtime.sendMessage({
+    type: "TASK_STATUS_UPDATE",
+    payload: a
+  }).catch(() => {});
+
+  // pc notify shit
+  if (a?.completed) {
+    chrome.notifications.create(
+      `badgeify-${Date.now()}`,
+      {
+        type: "basic",
+        iconUrl: chrome.runtime.getURL("assets/icons/icon128.png"),
+        title: "Badgeify — Completed!",
+        message: a.text || "Your badge task has finished successfully.",
+        priority: 2
+      }
+    );
+  }
+}
 }
 async function findActiveDiscordTab(a) {
   try {
