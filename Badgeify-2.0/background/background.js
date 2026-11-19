@@ -634,7 +634,16 @@ async function playCompletionSound() {
         justification: "Play a sound when a badge task finishes."
       });
     }
-    await chrome.runtime.sendMessage({ type: "BADGEIFY_PLAY_SUCCESS_SOUND" });
+    // The offscreen script may not have registered its listener yet right after
+    // createDocument, so retry until it answers.
+    for (let attempt = 0; attempt < 12; attempt++) {
+      try {
+        const reply = await chrome.runtime.sendMessage({ type: "BADGEIFY_PLAY_SUCCESS_SOUND" });
+        if (reply?.ok) return;
+      } catch {}
+      await new Promise((r) => setTimeout(r, 150));
+    }
+    console.warn("[Badgeify] Offscreen document never answered the sound request.");
   } catch (error) {
     console.warn("[Badgeify] Completion sound unavailable:", error);
   }

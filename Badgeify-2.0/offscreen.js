@@ -96,28 +96,61 @@ async function playSynthSound() {
   wobble.stop(t + 0.9);
 }
 
+async function playVoiceViaContext() {
+  const ctx = await getContext();
+  if (!ctx) throw new Error("no AudioContext");
+  const res = await fetch(chrome.runtime.getURL(VOICE_FILE));
+  if (!res.ok) throw new Error(`voice file fetch failed: ${res.status}`);
+  const buffer = await ctx.decodeAudioData(await res.arrayBuffer());
+  await new Promise((resolve) => {
+    const src = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    gain.gain.value = 1.0;
+    src.buffer = buffer;
+    src.connect(gain);
+    gain.connect(ctx.destination);
+    src.onended = resolve;
+    src.start();
+  });
+}
+
+function playVoiceViaElement() {
+  return new Promise((resolve, reject) => {
+    const audio = new Audio(chrome.runtime.getURL(VOICE_FILE));
+    audio.volume = 1;
+    audio.onended = resolve;
+    audio.onerror = () => reject(new Error("audio element error"));
+    audio.play().catch(reject);
+  });
+}
+
 async function playVoice() {
   for (let i = 0; i < VOICE_REPEAT; i++) {
-    await new Promise((resolve) => {
-      const audio = new Audio(chrome.runtime.getURL(VOICE_FILE));
-      audio.volume = 1;
-      audio.onended = resolve;
-      audio.onerror = resolve;
-      audio.play().catch(resolve);
-    });
+    try {
+      await playVoiceViaContext();
+    } catch (error) {
+      console.warn("[Badgeify] Voice via AudioContext failed, trying <audio>:", error);
+      try {
+        await playVoiceViaElement();
+      } catch (error2) {
+        console.warn("[Badgeify] Voice playback failed:", error2);
+        return;
+      }
+    }
   }
 }
 
 async function playCompletionSound() {
   const customPlayed = await tryPlayCustomFile();
   if (!customPlayed) await playSynthSound();
-  setTimeout(() => playVoice().catch(() => {}), customPlayed ? 1200 : VOICE_DELAY_MS);
+  setTimeout(() => playVoice().catch((e) => console.warn("[Badgeify] Voice error:", e)), customPlayed ? 1200 : VOICE_DELAY_MS);
 }
 
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "BADGEIFY_PLAY_SUCCESS_SOUND") {
     playCompletionSound().catch((error) => {
       console.warn("[Badgeify] Could not play completion sound:", error);
     });
+    sendResponse({ ok: true }); // lets the worker know the sound really started
   }
 });
