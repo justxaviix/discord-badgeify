@@ -347,11 +347,16 @@ function parseBadges(a) {
   };
 }
 async function getState(a = !1) {
+  const webTab = await detectDiscordTab();
+  const webDetected = !!webTab;
   const t = await resolveSession(a);
   if (!t)
     return {
       authenticated: !1,
-      message: "Open Discord in a browser tab first.",
+      webDetected,
+      message: webDetected
+        ? "Discord web detected, but no login found. Refresh the Discord tab."
+        : "Open Discord in a browser tab first.",
     };
   const e = await fetchClientProperties(),
     s = crypto.randomUUID(),
@@ -392,6 +397,7 @@ async function getState(a = !1) {
       g = await getUsedGames();
     return {
       authenticated: !0,
+      webDetected,
       host: t.host,
       user: o,
       badges: i,
@@ -403,7 +409,7 @@ async function getState(a = !1) {
     return (
       console.error("[Badgeify] getState caught error:", r),
       await chrome.storage.local.remove("badgeify_auth"),
-      { authenticated: !1, error: r.message }
+      { authenticated: !1, webDetected, error: r.message }
     );
   }
 }
@@ -607,31 +613,46 @@ async function postBatch(a, t, e, s, n, c, d) {
     return (console.error("[Badgeify] Background postBatch error:", r), 0);
   }
 }
-async function detectDiscordTab() {
-  const tabs = await chrome.tabs.query({
-    url: [
-      "https://discord.com/*",
-      "https://ptb.discord.com/*",
-      "https://canary.discord.com/*"
-    ]
-  });
+const DISCORD_WEB_PATTERNS = ["https://*.discord.com/*", "https://discord.com/*"];
 
-  return tabs.find(tab => tab.id && tab.url) || null;
+// Finds an open Discord *web* tab (discord.com, ptb, canary). Returns null if none.
+async function detectDiscordTab() {
+  try {
+    const tabs = await chrome.tabs.query({ url: DISCORD_WEB_PATTERNS });
+    return tabs.find((tab) => tab.id && tab.url) || null;
+  } catch {
+    return null;
+  }
 }
+
 async function playCompletionSound() {
   try {
     if (!chrome.offscreen) return;
-    const offscreenUrl = chrome.runtime.getURL("offscreen.html");
     if (!(await chrome.offscreen.hasDocument())) {
       await chrome.offscreen.createDocument({
         url: "offscreen.html",
         reasons: ["AUDIO_PLAYBACK"],
-        justification: "Play a short sound when the current timer/task finishes."
+        justification: "Play a sound when a badge task finishes."
       });
     }
     await chrome.runtime.sendMessage({ type: "BADGEIFY_PLAY_SUCCESS_SOUND" });
   } catch (error) {
     console.warn("[Badgeify] Completion sound unavailable:", error);
+  }
+}
+
+function notifyDesktop(title, message) {
+  try {
+    chrome.notifications.create(`badgeify-${Date.now()}`, {
+      type: "basic",
+      iconUrl: chrome.runtime.getURL("assets/icons/icon128.png"),
+      title,
+      message: String(message || ""),
+      priority: 2,
+      requireInteraction: false
+    });
+  } catch (error) {
+    console.warn("[Badgeify] Notification failed:", error);
   }
 }
 
@@ -643,21 +664,13 @@ function updateStatus(a) {
     payload: a
   }).catch(() => {});
 
-  // pc notify shit
+  // Desktop notification + sound when the whole batch run finishes.
   if (a?.completed) {
+    notifyDesktop("Badgeify - Done!", a.text || "Your badge task has finished.");
     playCompletionSound();
-    chrome.notifications.create(
-      `badgeify-${Date.now()}`,
-      {
-        type: "basic",
-        iconUrl: chrome.runtime.getURL("assets/icons/icon128.png"),
-        title: "Badgeify — Completed!",
-        message: a.text || "Your badge task has finished successfully.",
-        priority: 2
-      }
-    );
+  } else if (a?.error) {
+    notifyDesktop("Badgeify - Failed", a.text || "The badge task hit an error.");
   }
-}
 }
 async function findActiveDiscordTab(a) {
   try {
@@ -670,6 +683,10 @@ async function findActiveDiscordTab(a) {
 }
 async function runForge(a, t = {}) {
   if (activeTask?.running) throw new Error("Task already running");
+  if (!(await detectDiscordTab())) {
+    notifyDesktop("Badgeify - Discord web not found", "Open Discord in a browser tab (discord.com) and try again.");
+    throw new Error("Discord web not detected. Open discord.com in a tab first.");
+  }
   const e = await resolveSession();
   if (!e)
     throw new Error(

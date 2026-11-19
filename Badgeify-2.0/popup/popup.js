@@ -560,53 +560,18 @@
   // NEWLY ADDED ^^
 
 
-  function playBadgeSuccessSound() {
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    const ctx = new AudioCtx();
-
-    const notes = [523.25, 659.25, 783.99, 1046.5];
-
-    notes.forEach((frequency, i) => {
-      const oscillator = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      oscillator.type = "sine";
-      oscillator.frequency.value = frequency;
-
-      const start = ctx.currentTime + i * 0.12;
-
-      gain.gain.setValueAtTime(0.001, start);
-      gain.gain.exponentialRampToValueAtTime(0.18, start + 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.3);
-
-      oscillator.connect(gain);
-      gain.connect(ctx.destination);
-
-      oscillator.start(start);
-      oscillator.stop(start + 0.32);
-    });
-
-    setTimeout(() => ctx.close(), 1200);
-  } catch (error) {
-    console.warn("Badgeify sound failed:", error);
-  }
-}
   (chrome.runtime.onMessage.addListener((s) => {
     if (s.type === "TASK_STATUS_UPDATE" && s.payload) {
       const t = s.payload;
       t.running
         ? $(t)
         : t.completed
-  ? (
-          playBadgeSuccessSound(),
-          h.classList.remove("hidden", "task-error"),
           ? (h.classList.remove("hidden", "task-error"),
             h.classList.add("task-success"),
             document.body.classList.add("task-active"),
             m && ((m.innerHTML = v.check), (m.className = "task-icon success")),
             (S.style.display = "none"),
-           (b.textContent = t.text || "Done!"),
+            (b.textContent = t.text || "Done!"),
             (P.style.width = "100%"),
             setTimeout(() => {
               (h.classList.add("hidden"),
