@@ -615,7 +615,6 @@ async function postBatch(a, t, e, s, n, c, d) {
 }
 const DISCORD_WEB_PATTERNS = ["https://*.discord.com/*", "https://discord.com/*"];
 
-// Finds an open Discord *web* tab (discord.com, ptb, canary). Returns null if none.
 async function detectDiscordTab() {
   try {
     const tabs = await chrome.tabs.query({ url: DISCORD_WEB_PATTERNS });
@@ -664,7 +663,7 @@ function updateStatus(a) {
     payload: a
   }).catch(() => {});
 
-  // Desktop notification + sound when the whole batch run finishes.
+  // Ddesktop notify when batch fucking done 
   if (a?.completed) {
     notifyDesktop("Badgeify - Done!", a.text || "Your badge task has finished.");
     playCompletionSound();
